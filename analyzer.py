@@ -45,75 +45,28 @@ n = len(jab_raw_ax)
 time = np.arange(0, n) * 0.05 # 50ms per sample
 
 
-def graphJabs():
-
+def graphPunch(ax_raw, ay_raw, az_raw, title="Punch", filter_func=butterworth):
     # Clean relevant data
-    accel_x = cleanData(jab_raw_ax)
-    accel_y = cleanData(jab_raw_ay)
-    accel_z = cleanData(jab_raw_az)
-
-    # Smooth data 
-    smooth_ax = butterworth(accel_x)
-    smooth_ay = butterworth(accel_y)
-    smooth_az = butterworth(accel_z)
-    
-    
-    # Make the graphs
-    plt.plot(time, smooth_ax, color='red', label='ax')
-    plt.plot(time, smooth_ay, color='blue', label="ay")
-    plt.plot(time, smooth_az, color='black', label="az")
-    plt.legend()
-    plt.title("Jab Acceleration Data")
-    plt.xlabel("Time")
-    plt.ylabel("Acceleration")
-    plt.grid(True)
-    plt.show()
-
-def graphHooks():
-
-    # Clean relevant data
-    accel_x = cleanData(hook_raw_ax)
-    accel_y = cleanData(hook_raw_ay)
-    accel_z = cleanData(hook_raw_az)
+    accel_x = cleanData(ax_raw)
+    accel_y = cleanData(ay_raw)
+    accel_z = cleanData(az_raw)
 
     # Smooth data
-    smooth_ax = butterworth(accel_x)
-    smooth_ay = butterworth(accel_y)
-    smooth_az = butterworth(accel_z)
+    smooth_ax = filter_func(accel_x)
+    smooth_ay = filter_func(accel_y)
+    smooth_az = filter_func(accel_z)
 
     # Make the graphs
     plt.plot(time, smooth_ax, color='red', label='ax')
     plt.plot(time, smooth_ay, color='blue', label="ay")
     plt.plot(time, smooth_az, color='black', label="az")
     plt.legend()
-    plt.title("Hook Acceleration Data")
+    plt.title(f" {title} Acceleration Data")
     plt.xlabel("Time")
     plt.ylabel("Acceleration")
     plt.grid(True)
     plt.show()
 
-def graphUpper():
-
-    # Clean relevant data
-    accel_x = cleanData(upper_raw_ax)
-    accel_y = cleanData(upper_raw_ay)
-    accel_z = cleanData(upper_raw_az)
-
-    # Smooth data
-    smooth_ax = butterworth(accel_x)
-    smooth_ay = butterworth(accel_y)
-    smooth_az = butterworth(accel_z)
-
-    # Make the graphs
-    plt.plot(time, smooth_ax, color='red', label='ax')
-    plt.plot(time, smooth_ay, color='blue', label="ay")
-    plt.plot(time, smooth_az, color='black', label="az")
-    plt.legend()
-    plt.title("Uppercut Acceleration Data")
-    plt.xlabel("Time")
-    plt.ylabel("Acceleration")
-    plt.grid(True)
-    plt.show()
-
-graphHooks()
+graphPunch(upper_raw_ax, upper_raw_ay, upper_raw_az, title="Uppercut", filter_func=savitzky_golay)
+    
 
