@@ -1,0 +1,119 @@
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.signal import savgol_filter, butter, filtfilt
+from scipy.ndimage import gaussian_filter1d
+
+
+# Data
+jab_raw_ax = [76, 52, 37, 59, 127, 127, 127, -128, -116, -128, -75, 14, 102, -107, 126, 40, -128, -124, -28, -128, -62, 26, 14, 13, 8, -128, -128, 15, -128, -43, -44, -1, -104, 68, 26, -128, -36, -128, -99, -80, -41, 25, 0, -128, 71, -128, -128, -76, -110, -97, 48, -23, -128, -79, -128, -128, -42, 4, -73, -25, -16, 56, -128, -128, -128, -46, 40, -90, 51, -49, 43, -128, -112, -128, 4, -53, -114, -57, -128, -55]
+jab_raw_ay = [-35, -62, -40, -5, 127, 127, 127, -128, -128, -128, 0, 127, 127, 127, 127, 127, 5, -128, -128, 22, 127, 127, 127, 127, 127, 127, -128, -128, -66, 127, 127, 127, 127, 127, 127, -128, -128, -58, 127, 127, 127, 127, 127, 16, -128, -128, 13, 127, 127, 127, 127, 127, -7, -128, -128, -66, 61, 127, 127, 127, 127, 107, -128, -128, -128, 80, 127, 127, 127, 127, 127, -128, -128, -76, 118, 127, 127, 127, 127, 62]
+jab_raw_az = [65, 29, 5, 57, 127, -70, -5, 127, 127, 127, 127, 28, 17, 127, 101, 116, -111, 127, 127, 127, 109, -70, 1, 26, -128, -128, 127, 127, 127, 73, -48, -101, -33, -128, -51, 127, 127, 127, 88, -89, -74, 38, -128, -32, 127, 127, 113, 102, -128, -8, 46, -90, -35, 127, 127, 104, 99, -9, 46, 115, -128, -43, 127, 127, 127, 87, 56, 43, 114, -128, -54, 127, 127, 127, 67, -62, 59, 67, -91, 50]
+
+hook_raw_ax = [127, 127, 127, -128, -128, 59, 127, 127, -10, -128, -128, -62, 127, 127, 127, 127, -128, -128, -128, 120, 108, -15, 10, 93, 127, 127, 127, -128, -128, -128, 80, 113, -128, -36, 34, 127, 127, 127, 127, 127, 127, -128, -128, -128, 127, 45, -53, -42, 127, 127, 70, 127, 127, 127, 97, -128, -128, -128, 83, 85, -54, -55, 127, 127, 127, 47, 127, 127, 127, -128, -128, -128, -128, 127, 90, -79, -19, 127, 127, 127]
+hook_raw_ay = [-128, -128, -128, -128, -128, -128, -128, -128, -128, 12, 41, 44, -82, -128, -128, -128, -128, -128, -128, -80, -128, -110, -17, 21, 74, -128, -128, -128, -128, -128, -128, -128, -128, -128, -19, -73, -85, 5, -61, -128, -128, -128, -128, -128, -128, -128, -128, -91, -19, 43, -128, 4, -68, -128, -128, -128, -128, -128, -128, -128, -128, -128, -19, 68, 68, -24, -93, -128, -128, -128, -128, -128, -128, -113, -128, -42, 41, 37, 5, -57]
+hook_raw_az = [127, 95, -128, -128, 127, 127, 127, 127, 8, -35, -39, 18, 127, 127, 127, -128, -128, 127, 33, 60, 29, 101, 52, 36, 125, 127, 127, -128, -128, -40, 38, 127, 127, 76, 127, -69, -85, -90, 18, 127, -128, -128, -128, 39, 127, 127, 56, -69, 127, -128, -128, -70, 127, 127, -128, -128, -128, 18, 32, 127, 127, -44, -15, -22, -118, -103, 102, 127, 127, -128, -128, -102, 127, 127, 91, -98, -27, -39, -92, -90]
+
+upper_raw_ax = [-27, -128, -128, 18, 113, 127, 127, 127, 127, 127, -39, -128, -128, -56, 127, 39, 80, 93, 127, 127, 127, 127, 127, 127, 127, -128, -128, 107, 127, 47, -33, 42, 87, 127, 127, 127, 127, 127, -128, -128, 41, 127, 82, 70, 127, 117, 127, 127, 127, 127, 127, 127, 78, -128, -64, -44, 39, 127, 83, 125, 127, 127, 127, 127, 127, 127, 127, -29, -128, -109, -103, -15, 100, 125, 45, 127, 127, 127, 127, 127]
+upper_raw_ay = [-128, -89, -113, -89, -128, -128, -128, -128, -128, -128, -128, -128, -128, 48, -49, -53, -56, -5, -128, -90, -80, -128, -56, -128, -128, -128, -128, -10, -4, 41, -37, 80, -125, -117, -109, -128, -128, -128, -128, -128, -85, -90, 15, -63, -59, 28, -33, -73, -112, 19, 22, -128, -128, -128, -128, -18, 3, -26, 24, 77, -5, 8, -29, -112, -60, 78, -128, -128, -128, -128, 6, -22, -16, -52, 39, -24, -31, -17, 26, 10]
+upper_raw_az = [95, -20, -70, -22, -80, -121, -128, -128, -128, -128, -128, 99, 127, -73, -43, 127, 127, -1, -96, -90, -68, -120, -128, -128, -128, -41, 127, -84, -45, -76, 127, -28, -128, -128, -128, -128, -128, -128, -128, 127, 72, 43, -5, 3, 7, -60, -109, -128, -128, -128, -128, -128, -128, 8, 127, 4, -36, 55, -51, 102, -27, -47, -11, -3, -128, -128, -128, -128, 127, 127, -28, 59, 6, 52, 91, -30, -109, -104, -67, -3]
+
+# Processing
+def cleanData(raw):
+    approx_raw = [x * 128 for x in raw]
+    accel = [x / 16384.0 * 2.0 for x in approx_raw]
+    return accel
+
+# Filters 
+def movingAverage(data, window_size=5):
+    return np.convolve(data, np.ones(window_size) / window_size, mode='same')
+
+def savitzky_golay(signal, window=9, poly=2):
+    return savgol_filter(signal, window_length=window, polyorder=poly)
+
+def gaussian(signal, sigma=2):
+    return gaussian_filter1d(signal, sigma)
+
+def butterworth(signal, cutoff=2.0, fs=20.0, order=2):
+    nyq = 0.5 * fs
+    normal_cutoff = cutoff / nyq
+    b, a = butter(order, normal_cutoff, btype='low', analog=False)
+    return filtfilt(b, a, signal)
+
+
+# Define time for x-axis
+n = len(jab_raw_ax)
+time = np.arange(0, n) * 0.05 # 50ms per sample
+
+
+def graphJabs():
+
+    # Clean relevant data
+    accel_x = cleanData(jab_raw_ax)
+    accel_y = cleanData(jab_raw_ay)
+    accel_z = cleanData(jab_raw_az)
+
+    # Smooth data 
+    smooth_ax = butterworth(accel_x)
+    smooth_ay = butterworth(accel_y)
+    smooth_az = butterworth(accel_z)
+    
+    
+    # Make the graphs
+    plt.plot(time, smooth_ax, color='red', label='ax')
+    plt.plot(time, smooth_ay, color='blue', label="ay")
+    plt.plot(time, smooth_az, color='black', label="az")
+    plt.legend()
+    plt.title("Jab Acceleration Data")
+    plt.xlabel("Time")
+    plt.ylabel("Acceleration")
+    plt.grid(True)
+    plt.show()
+
+def graphHooks():
+
+    # Clean relevant data
+    accel_x = cleanData(hook_raw_ax)
+    accel_y = cleanData(hook_raw_ay)
+    accel_z = cleanData(hook_raw_az)
+
+    # Smooth data
+    smooth_ax = butterworth(accel_x)
+    smooth_ay = butterworth(accel_y)
+    smooth_az = butterworth(accel_z)
+
+    # Make the graphs
+    plt.plot(time, smooth_ax, color='red', label='ax')
+    plt.plot(time, smooth_ay, color='blue', label="ay")
+    plt.plot(time, smooth_az, color='black', label="az")
+    plt.legend()
+    plt.title("Hook Acceleration Data")
+    plt.xlabel("Time")
+    plt.ylabel("Acceleration")
+    plt.grid(True)
+    plt.show()
+
+def graphUpper():
+
+    # Clean relevant data
+    accel_x = cleanData(upper_raw_ax)
+    accel_y = cleanData(upper_raw_ay)
+    accel_z = cleanData(upper_raw_az)
+
+    # Smooth data
+    smooth_ax = butterworth(accel_x)
+    smooth_ay = butterworth(accel_y)
+    smooth_az = butterworth(accel_z)
+
+    # Make the graphs
+    plt.plot(time, smooth_ax, color='red', label='ax')
+    plt.plot(time, smooth_ay, color='blue', label="ay")
+    plt.plot(time, smooth_az, color='black', label="az")
+    plt.legend()
+    plt.title("Uppercut Acceleration Data")
+    plt.xlabel("Time")
+    plt.ylabel("Acceleration")
+    plt.grid(True)
+    plt.show()
+
+graphHooks()
+
